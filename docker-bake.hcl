@@ -1,5 +1,5 @@
 group "default" {
-  targets = ["content_service", "enterprise-search"]
+  targets = ["content_service", "enterprise-search", "ats"]
 }
 
 group "content_service" {
@@ -8,6 +8,10 @@ group "content_service" {
 
 group "enterprise-search" {
   targets = ["search_liveindexing"]
+}
+
+group "ats" {
+  targets = ["ats_trouter"]
 }
 
 variable "LABEL_VENDOR" {
@@ -108,7 +112,7 @@ target "java_base" {
     "org.opencontainers.image.source" = "$LABEL_SOURCE"
     "org.opencontainers.image.authors" = "${LABEL_AUTHOR}"
   }
-  tags = ["alfresco-base-java:${JDIST}${JAVA_MAJOR}-${DISTRIB_NAME}${DISTRIB_MAJOR}"]
+  tags = ["localhost/alfresco-base-java:${JDIST}${JAVA_MAJOR}-${DISTRIB_NAME}${DISTRIB_MAJOR}"]
   output = ["type=cacheonly"]
 }
 
@@ -150,7 +154,7 @@ target "tomcat_base" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} Tomcat"
     "org.opencontainers.image.description" = "A base image shipping Tomcat for Alfresco Products"
   }
-  tags = ["alfresco-base-tomcat:tomcat${TOMCAT_MAJOR}-${JDIST}${JAVA_MAJOR}-${DISTRIB_NAME}${DISTRIB_MAJOR}"]
+  tags = ["localhost/alfresco-base-tomcat:tomcat${TOMCAT_MAJOR}-${JDIST}${JAVA_MAJOR}-${DISTRIB_NAME}${DISTRIB_MAJOR}"]
   output = ["type=cacheonly"]
 }
 
@@ -171,7 +175,7 @@ target "repository" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} Content Repository"
     "org.opencontainers.image.description" = "Alfresco Content Services Repository"
   }
-  tags = ["alfresco-content-repository:latest"]
+  tags = ["localhost/alfresco-content-repository:latest"]
   output = ["type=docker"]
 }
 
@@ -209,6 +213,42 @@ target "search_liveindexing" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} Enterprise Search - ${liveindexing.name}"
     "org.opencontainers.image.description" = "${PRODUCT_LINE} Enterprise Search - ${liveindexing.name} live indexing"
   }
-  tags = ["${liveindexing.artifact}:latest"]
+  tags = ["localhost/${liveindexing.artifact}:latest"]
+  output = ["type=docker"]
+}
+
+variable "ALFRESCO_TROUTER_GROUP_NAME" {
+  default = "Alfresco"
+}
+
+variable "ALFRESCO_TROUTER_GROUP_ID" {
+  default = "1000"
+}
+
+variable "ALFRESCO_TROUTER_USER_NAME" {
+  default = "trouter"
+}
+
+variable "ALFRESCO_TROUTER_USER_ID" {
+  default = "33016"
+}
+
+target "ats_trouter" {
+  dockerfile = "./ats/trouter/Dockerfile"
+  inherits = ["java_base"]
+  contexts = {
+    java_base = "target:java_base"
+  }
+  args = {
+    ALFRESCO_TROUTER_GROUP_NAME = "${ALFRESCO_TROUTER_GROUP_NAME}"
+    ALFRESCO_TROUTER_GROUP_ID = "${ALFRESCO_TROUTER_GROUP_ID}"
+    ALFRESCO_TROUTER_USER_NAME = "${ALFRESCO_TROUTER_USER_NAME}"
+    ALFRESCO_TROUTER_USER_ID = "${ALFRESCO_TROUTER_USER_ID}"
+  }
+  labels = {
+    "org.opencontainers.image.title" = "${PRODUCT_LINE} ATS Trouter"
+    "org.opencontainers.image.description" = "Alfresco Transform Service Trouter"
+  }
+  tags = ["localhost/alfresco-transform-router:latest"]
   output = ["type=docker"]
 }
