@@ -1,5 +1,5 @@
 group "default" {
-  targets = ["content_service", "enterprise-search", "ats"]
+  targets = ["content_service", "enterprise-search", "ats", "tengines"]
 }
 
 group "content_service" {
@@ -12,6 +12,10 @@ group "enterprise-search" {
 
 group "ats" {
   targets = ["ats_trouter", "ats_sfs"]
+}
+
+group "tengines" {
+  targets = ["tengine_imagemagick"]
 }
 
 variable "LABEL_VENDOR" {
@@ -270,5 +274,33 @@ target "ats_sfs" {
     "org.opencontainers.image.description" = "Alfresco Transform Service ATS Shared File Store"
   }
   tags = ["localhost/alfresco-shared-file-store:latest"]
+  output = ["type=docker"]
+}
+
+variable "ALFRESCO_IMAGEMAGICK_USER_NAME" {
+  default = "imagemagick"
+}
+
+variable "ALFRESCO_IMAGEMAGICK_USER_ID" {
+  default = "33002"
+}
+
+target "tengine_imagemagick" {
+  dockerfile = "./tengine/imagemagick/Dockerfile"
+  inherits = ["java_base"]
+  contexts = {
+    java_base = "target:java_base"
+  }
+  args = {
+    ALFRESCO_IMAGEMAGICK_GROUP_NAME = "${ALFRESCO_GROUP_NAME}"
+    ALFRESCO_IMAGEMAGICK_GROUP_ID = "${ALFRESCO_GROUP_ID}"
+    ALFRESCO_IMAGEMAGICK_USER_NAME = "${ALFRESCO_IMAGEMAGICK_USER_NAME}"
+    ALFRESCO_IMAGEMAGICK_USER_ID = "${ALFRESCO_IMAGEMAGICK_USER_ID}"
+  }
+  labels = {
+    "org.opencontainers.image.title" = "${PRODUCT_LINE} Transform Engine Imagemagick"
+    "org.opencontainers.image.description" = "Alfresco Transform Engine Imagemagick"
+  }
+  tags = ["localhost/alfresco-imagemagick:latest"]
   output = ["type=docker"]
 }
