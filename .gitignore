@@ -2,3 +2,5 @@
 *.amp
 dist
 *.jar
+*.rpm
+*.gz

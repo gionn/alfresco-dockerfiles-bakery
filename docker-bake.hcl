@@ -15,7 +15,7 @@ group "ats" {
 }
 
 group "tengines" {
-  targets = ["tengine_imagemagick"]
+  targets = ["tengine_libreoffice", "tengine_imagemagick"]
 }
 
 variable "LABEL_VENDOR" {
@@ -302,5 +302,33 @@ target "tengine_imagemagick" {
     "org.opencontainers.image.description" = "Alfresco Transform Engine Imagemagick"
   }
   tags = ["localhost/alfresco-imagemagick:latest"]
+  output = ["type=docker"]
+}
+
+variable "ALFRESCO_LIBREOFFICE_USER_NAME" {
+  default = "libreoffice"
+}
+
+variable "ALFRESCO_LIBREOFFICE_USER_ID" {
+  default = "33002"
+}
+
+target "tengine_libreoffice" {
+  dockerfile = "./tengine/libreoffice/Dockerfile"
+  inherits = ["java_base"]
+  contexts = {
+    java_base = "target:java_base"
+  }
+  args = {
+    ALFRESCO_LIBREOFFICE_GROUP_NAME = "${ALFRESCO_GROUP_NAME}"
+    ALFRESCO_LIBREOFFICE_GROUP_ID = "${ALFRESCO_GROUP_ID}"
+    ALFRESCO_LIBREOFFICE_USER_NAME = "${ALFRESCO_LIBREOFFICE_USER_NAME}"
+    ALFRESCO_LIBREOFFICE_USER_ID = "${ALFRESCO_LIBREOFFICE_USER_ID}"
+  }
+  labels = {
+    "org.opencontainers.image.title" = "${PRODUCT_LINE} Transform Engine LibreOffice"
+    "org.opencontainers.image.description" = "Alfresco Transform Engine LibreOffice"
+  }
+  tags = ["localhost/alfresco-libreoffice:latest"]
   output = ["type=docker"]
 }
