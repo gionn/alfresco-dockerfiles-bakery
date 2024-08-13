@@ -48,6 +48,15 @@ alfresco-transform-service:
       repository: localhost/alfresco-shared-file-store
       tag: latest
 #alfresco-sync-service:
+alfresco-connector-ms365:
+  enabled: true
+  image:
+    repository: localhost/alfresco-ooi-service
+    tag: latest
+  environment:
+    ALFRESCO_ADMIN_PASSWORD: admin
+    ALFRESCO_ADMIN_USERNAME: admin
+  livenessProbe: null
 dtas:
   additionalArgs:
     - --tb=short
