@@ -1,8 +1,9 @@
 *.zip
 *.amp
-dist
-*.jar
 *.rpm
+*.deb
+*.jar
+*.tgz
 *.gz
 *.tgz
 

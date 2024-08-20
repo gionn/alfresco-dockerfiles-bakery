@@ -4,13 +4,18 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'Makefile'
+      - '.github/workflows/test-make.yml'
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - 'Makefile'
+      - '.github/workflows/test-make.yml'
 
 env:
-  ACS_CHART_VERSION: 8.3.0
-  ACS_VALUES_VERSION: cfb0d426eff14a8b581c31e61db5e670da09ba3b
+  ACS_CHART_VERSION: 172410cfb4ad44d4839d9aefd31b4bcefc44f316
   ARTIFACT_NAME: alfresco-docker-images
 
 concurrency:
@@ -47,7 +52,7 @@ jobs:
           echo "password ${{ secrets.NEXUS_PASSWORD }}" >> ~/.netrc
 
       - name: Fetch artifacts from nexus
-        run: ./scripts/fetch-artifact.sh
+        run: ./scripts/fetch-artifacts.sh
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
@@ -119,6 +124,7 @@ jobs:
 
       - uses: Alfresco/alfresco-build-tools/.github/actions/docker-dump-containers-logs@v6.0.0
 
+
   helm-test:
     name: helm test
     needs: build-test
@@ -160,25 +166,30 @@ jobs:
           --from-file=.dockerconfigjson=$HOME/.docker/config.json
           --type=kubernetes.io/dockerconfigjson
 
-      - name: Fetch upstream values for tests
-        run: >-
-          curl -ssfL
-          https://raw.githubusercontent.com/Alfresco/acs-deployment/${{ env.ACS_VALUES_VERSION }}/test/enterprise-integration-test-values.yaml
-          -o test/helm/enterprise-integration-test-values.yaml &&
-          ls -l test/helm/enterprise-integration-test-values.yaml &&
-          cat test/helm/enterprise-integration-test-values.yaml
+      - name: Checkout acs-deployment sources
+        uses: actions/checkout@v4
+        with:
+          repository: Alfresco/acs-deployment
+          ref: ${{ env.ACS_CHART_VERSION }} 
+          path: github-source
+
+      - name: Setup helm repository
+        working-directory: github-source/helm/alfresco-content-services
+        run: |
+          helm repo add self https://alfresco.github.io/alfresco-helm-charts/
+          helm repo add activiti https://activiti.github.io/activiti-cloud-helm-charts
+          helm repo add bitnami https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami/
+          helm repo add elastic https://helm.elastic.co
+          helm dependency build
 
       - name: Helm install
         id: helm_install
         run: |
-          helm repo add alfresco https://kubernetes-charts.alfresco.com/stable
-          helm repo update
-          helm install acs alfresco/alfresco-content-services \
-            --version ${{ env.ACS_CHART_VERSION }} \
+          helm install acs ./github-source/helm/alfresco-content-services \
             --set global.search.sharedSecret="$(openssl rand -hex 24)" \
             --set global.known_urls=http://localhost \
             --set global.alfrescoRegistryPullSecrets=regcred \
-            --values test/helm/enterprise-integration-test-values.yaml \
+            --values ./github-source/test/enterprise-integration-test-values.yaml \
             --values test/helm/test-overrides.yaml
 
       - name: Watch Helm deployment
