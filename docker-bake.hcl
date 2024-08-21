@@ -22,6 +22,18 @@ group "connectors" {
   targets = ["connector_msteams", "connector_ms365"]
 }
 
+variable "REGISTRY" {
+  default = "localhost"
+}
+
+variable "REGISTRY_NAMESPACE" {
+  default = "alfresco"
+}
+
+variable "TAG" {
+  default = "latest"
+}
+
 variable "LABEL_VENDOR" {
   default = "Hyland Software, Inc."
 }
@@ -121,7 +133,7 @@ target "java_base" {
     "org.opencontainers.image.source" = "$LABEL_SOURCE"
     "org.opencontainers.image.authors" = "${LABEL_AUTHOR}"
   }
-  tags = ["localhost/alfresco-base-java:${JDIST}${JAVA_MAJOR}-${DISTRIB_NAME}${DISTRIB_MAJOR}"]
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-base-java:${JDIST}${JAVA_MAJOR}-${DISTRIB_NAME}${DISTRIB_MAJOR}"]
   output = ["type=cacheonly"]
 }
 
@@ -164,7 +176,7 @@ target "tomcat_base" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} Tomcat"
     "org.opencontainers.image.description" = "A base image shipping Tomcat for Alfresco Products"
   }
-  tags = ["localhost/alfresco-base-tomcat:tomcat${TOMCAT_MAJOR}-${JDIST}${JAVA_MAJOR}-${DISTRIB_NAME}${DISTRIB_MAJOR}"]
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-base-tomcat:tomcat${TOMCAT_MAJOR}-${JDIST}${JAVA_MAJOR}-${DISTRIB_NAME}${DISTRIB_MAJOR}"]
   output = ["type=cacheonly"]
 }
 
@@ -185,7 +197,7 @@ target "repository" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} Content Repository"
     "org.opencontainers.image.description" = "Alfresco Content Services Repository"
   }
-  tags = ["localhost/alfresco-content-repository:latest"]
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-content-repository:${TAG}"]
   output = ["type=docker"]
 }
 
@@ -224,7 +236,7 @@ target "search_liveindexing" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} Enterprise Search - ${liveindexing.name}"
     "org.opencontainers.image.description" = "${PRODUCT_LINE} Enterprise Search - ${liveindexing.name} live indexing"
   }
-  tags = ["localhost/${liveindexing.artifact}:latest"]
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/${liveindexing.artifact}:${TAG}"]
   output = ["type=docker"]
 }
 
@@ -253,7 +265,7 @@ target "ats_trouter" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} ATS Trouter"
     "org.opencontainers.image.description" = "Alfresco Transform Service Trouter"
   }
-  tags = ["localhost/alfresco-transform-router:latest"]
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-transform-router:${TAG}"]
   output = ["type=docker"]
 }
 
@@ -282,7 +294,7 @@ target "ats_sfs" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} ATS Shared File Store"
     "org.opencontainers.image.description" = "Alfresco Transform Service ATS Shared File Store"
   }
-  tags = ["localhost/alfresco-shared-file-store:latest"]
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-shared-file-store:${TAG}"]
   output = ["type=docker"]
 }
 
@@ -311,7 +323,7 @@ target "tengine_imagemagick" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} Transform Engine Imagemagick"
     "org.opencontainers.image.description" = "Alfresco Transform Engine Imagemagick"
   }
-  tags = ["localhost/alfresco-imagemagick:latest"]
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-imagemagick:${TAG}"]
   output = ["type=docker"]
 }
 
@@ -340,7 +352,7 @@ target "tengine_libreoffice" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} Transform Engine LibreOffice"
     "org.opencontainers.image.description" = "Alfresco Transform Engine LibreOffice"
   }
-  tags = ["localhost/alfresco-libreoffice:latest"]
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-libreoffice:${TAG}"]
   output = ["type=docker"]
 }
 
@@ -369,7 +381,7 @@ target "tengine_misc" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} Transform Engine Misc"
     "org.opencontainers.image.description" = "Alfresco Transform Engine Misc"
   }
-  tags = ["localhost/alfresco-misc:latest"]
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-misc:${TAG}"]
   output = ["type=docker"]
 }
 
@@ -398,7 +410,7 @@ target "tengine_tika" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} Transform Engine Tika"
     "org.opencontainers.image.description" = "Alfresco Transform Engine Tika"
   }
-  tags = ["localhost/alfresco-tika:latest"]
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-tika:${TAG}"]
   output = ["type=docker"]
 }
 
@@ -427,7 +439,7 @@ target "tengine_pdfrenderer" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} Transform Engine PDF Renderer"
     "org.opencontainers.image.description" = "Alfresco Transform Engine PDF Renderer"
   }
-  tags = ["localhost/alfresco-pdf-renderer:latest"]
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-pdf-renderer:${TAG}"]
   output = ["type=docker"]
 }
 
@@ -456,7 +468,7 @@ target "tengine_aio" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} Transform Engine All In One"
     "org.opencontainers.image.description" = "Alfresco Transform Engine All In One"
   }
-  tags = ["localhost/alfresco-transform-core-aio:latest"]
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-transform-core-aio:${TAG}"]
   output = ["type=docker"]
 }
 
@@ -485,7 +497,7 @@ target "connector_msteams" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} Connector Microsoft Teams"
     "org.opencontainers.image.description" = "Alfresco Connector Microsoft Teams"
   }
-  tags = ["localhost/alfresco-ms-teams-service:latest"]
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-ms-teams-service:${TAG}"]
   output = ["type=docker"]
 }
 
@@ -514,6 +526,6 @@ target "connector_ms365" {
     "org.opencontainers.image.title" = "${PRODUCT_LINE} Microsoft 365 Connector"
     "org.opencontainers.image.description" = "Alfresco Microsoft 365 Connector"
   }
-  tags = ["localhost/alfresco-ooi-service:latest"]
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-ooi-service:${TAG}"]
   output = ["type=docker"]
 }
