@@ -37,3 +37,22 @@ types of files in the right locations:
 
 * Alfresco Module Packages (AMPs) files in the [amps}(repository/amps/README.md) folder
 * Additional JAR files for the JRE in the [libs](repository/libs/README.md) folder
+
+## Architecture choice
+
+The image architecture defaults to the building system's architecture. To modify
+it, you need to adjust variable when running bake command.
+
+```sh
+
+docker buildx bake --set *.platform=linux/arm64
+
+```
+
+To build just a specific image use e.g.:
+
+```sh
+
+docker buildx bake --set java_base.platform=linux/amd64 java_base
+
+```
