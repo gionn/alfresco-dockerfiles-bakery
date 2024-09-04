@@ -3,23 +3,24 @@ FROM java_base
 EXPOSE 8090
 
 ENV JAVA_OPTS_CONTAINER_FLAGS=-XX:MaxRAMPercentage=80
-ENV IMAGEMAGICK_DEP_RPM_URL=https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
 
 ARG ALFRESCO_IMAGEMAGICK_GROUP_NAME
 ARG ALFRESCO_IMAGEMAGICK_GROUP_ID
 ARG ALFRESCO_IMAGEMAGICK_USER_NAME
 ARG ALFRESCO_IMAGEMAGICK_USER_ID
+ARG DISTRIB_MAJOR
+ARG TARGETARCH
 
-ADD alfresco-transform-imagemagick*.jar /opt/app.jar
-ADD imagemagick-distribution*-el9.rpm /tmp/imagemagick-distribution-el9.rpm
-ADD libs/imagemagick-distribution*-libs-el9.rpm /tmp/imagemagick-distribution-libs-el9.rpm
+COPY alfresco-transform-imagemagick*.jar /opt/app.jar
 
-RUN yum install -y $IMAGEMAGICK_DEP_RPM_URL && \
-    yum install -y /tmp/imagemagick-distribution-el9.rpm /tmp/imagemagick-distribution-libs-el9.rpm; \
-    yum clean all
+RUN --mount=type=bind,source=/,target=/dist \
+    [ "$TARGETARCH" == 'arm64' ] && export PKGARCH='-aarch64'; \
+    yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-${DISTRIB_MAJOR}.noarch.rpm; \
+    yum localinstall -y /dist/imagemagick-distribution-*-el${DISTRIB_MAJOR}${PKGARCH}.rpm /dist/libs/imagemagick-distribution-*-libs-el${DISTRIB_MAJOR}${PKGARCH}.rpm; \
+    yum clean all && rm -rf /var/cache/yum
 
 RUN groupadd -g ${ALFRESCO_IMAGEMAGICK_GROUP_ID} ${ALFRESCO_IMAGEMAGICK_GROUP_NAME} && \
-    useradd -u ${ALFRESCO_IMAGEMAGICK_USER_ID} -g ${ALFRESCO_IMAGEMAGICK_GROUP_NAME} ${ALFRESCO_IMAGEMAGICK_USER_NAME} && \
+    useradd -lu ${ALFRESCO_IMAGEMAGICK_USER_ID} -g ${ALFRESCO_IMAGEMAGICK_GROUP_NAME} ${ALFRESCO_IMAGEMAGICK_USER_NAME} && \
     chgrp ${ALFRESCO_IMAGEMAGICK_GROUP_NAME} /opt/app.jar
 
 USER ${ALFRESCO_IMAGEMAGICK_USER_NAME}
