@@ -8,12 +8,18 @@ ARG ALFRESCO_LIBREOFFICE_GROUP_NAME
 ARG ALFRESCO_LIBREOFFICE_GROUP_ID
 ARG ALFRESCO_LIBREOFFICE_USER_NAME
 ARG ALFRESCO_LIBREOFFICE_USER_ID
+ARG TARGETARCH
 
 RUN --mount=type=bind,source=/,target=/dist \
-    mkdir /tmp/dist && \
-    tar xzf /dist/*.gz -C /tmp/dist && \
-    yum localinstall -y /tmp/dist/LibreOffice*/RPMS/*.rpm && \
     yum install -y cairo cups-libs libSM libGLU && \
+    if [ "$TARGETARCH" == 'arm64' ]; then \
+        yum --enablerepo=devel install -y libreoffice && \
+        update-alternatives --set java java-17-openjdk.aarch64; \
+    else \
+        mkdir /tmp/dist && \
+        tar xzf /dist/*.gz -C /tmp/dist && \
+        yum localinstall -y /tmp/dist/LibreOffice*/RPMS/*.rpm; \
+    fi && \
     rm -rf /tmp/dist && \
     yum clean all
 
