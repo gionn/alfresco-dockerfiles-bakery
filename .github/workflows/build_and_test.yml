@@ -116,9 +116,12 @@ jobs:
           comment_on_pr: false
 
       - name: Bake Docker images
+        env:
+          TARGETARCH: linux/amd64,linux/arm64
         uses: docker/bake-action@a4d7f0b5b91c14a296d792d4ec53a9db17f02e67  # v5.5.0
         with:
-          push: true
+          set: |
+            *.output=type=registry,push=true
 
       - name: Show all built images
         run: docker images
@@ -150,9 +153,13 @@ jobs:
 
 
   helm-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, amd64]
     name: helm test
     needs: build-test
-    runs-on: alfrescoPub-ubuntu2204-16G-4CPU
+    runs-on: ${{ matrix.arch == 'arm64' && 'alfrescoARM-ubuntu2404-16G-4CPU' || 'alfrescoPub-ubuntu2204-16G-4CPU' }}
     steps:
       - name: Setup cluster
         uses: Alfresco/alfresco-build-tools/.github/actions/setup-kind@v5.35.0
@@ -238,6 +245,21 @@ jobs:
           helm ls --all-namespaces --all
           kubectl get all --all-namespaces
           kubectl describe pod
+
+      - name: Collect logs from all containers
+        if: always() && steps.helm_install.outcome != 'skipped'
+        run: |
+          mkdir -p logs
+          for pod in $(kubectl get pods -n default -o jsonpath='{.items[*].metadata.name}'); do
+            kubectl logs $pod -n default > logs/${pod}.log
+          done
+
+      - name: Upload logs as artifact
+        if: always() && steps.helm_install.outcome != 'skipped'
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 #v4.4.0
+        with:
+          name: k8s-logs-${{ matrix.arch }}
+          path: logs
 
       - name: Run helm test
         id: helm_test
