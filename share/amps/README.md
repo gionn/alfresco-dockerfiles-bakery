@@ -1,7 +1,7 @@
-# Alfresco repository AMPs
+# Alfresco share AMPs
 
 Place here your Alfresco module Packages (AMPs) to be installed in the Alfresco
-repository.
+share.
 
 AMP packages should have the `.amp` extension and stick to the Alfresco module
 packaging format as described in the [Alfresco
@@ -19,12 +19,6 @@ way to build well structured AMPs.
 
 By default the `scripts/fetch-artifacts.sh` script will fetch the following AMPs from the Alfresco Nexus repository:
 
-* alfresco-share-services
-* alfresco-aos-module
-* alfresco-device-sync-repo
-* alfresco-googledrive-repo-enterprise
-* alfresco-content-services-distribution
+* alfresco-googledrive-share
 
 You can replace those, remove them to keep only the ones you need or add more.
-Be careful though as some AMPs may depend on one another (e.g.
-`googldrive-repo` depends on `alfresco-share-services`).

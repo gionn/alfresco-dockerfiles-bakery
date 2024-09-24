@@ -3,7 +3,7 @@ group "default" {
 }
 
 group "content_service" {
-  targets = ["repository"]
+  targets = ["repository", "share"]
 }
 
 group "enterprise-search" {
@@ -543,6 +543,36 @@ target "connector_ms365" {
     "org.opencontainers.image.description" = "Alfresco Microsoft 365 Connector"
   }
   tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-ooi-service:${TAG}"]
+  output = ["type=docker"]
+  platforms = split(",", "${TARGETARCH}")
+}
+
+variable "ALFRESCO_SHARE_USER_NAME" {
+  default = "share"
+}
+
+variable "ALFRESCO_SHARE_USER_ID" {
+  default = "33010"
+}
+
+target "share" {
+  context = "./share"
+  dockerfile = "Dockerfile"
+  inherits = ["tomcat_base"]
+  contexts = {
+    tomcat_base = "target:tomcat_base"
+  }
+  args = {
+    ALFRESCO_SHARE_GROUP_NAME = "${ALFRESCO_GROUP_NAME}"
+    ALFRESCO_SHARE_GROUP_ID = "${ALFRESCO_GROUP_ID}"
+    ALFRESCO_SHARE_USER_NAME = "${ALFRESCO_SHARE_USER_NAME}"
+    ALFRESCO_SHARE_USER_ID = "${ALFRESCO_SHARE_USER_ID}"
+  }
+  labels = {
+    "org.opencontainers.image.title" = "${PRODUCT_LINE} Share"
+    "org.opencontainers.image.description" = "Alfresco Share"
+  }
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-share:${TAG}"]
   output = ["type=docker"]
   platforms = split(",", "${TARGETARCH}")
 }
