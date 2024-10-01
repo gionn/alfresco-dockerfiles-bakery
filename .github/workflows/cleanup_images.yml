@@ -1,0 +1,66 @@
+name: Cleanup Docker images on ghcr.io
+
+on:
+  pull_request:
+    types: [closed]
+  schedule:
+    - cron: '0 0 */14 * *'  # Every 2 weeks
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'If set to false, images will be deleted'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  packages: write
+
+env:
+  KEEP_AMOUNT: 1 # onetime cleanup
+  ORG: Alfresco
+  REPO: alfresco-dockerfiles-bakery
+
+jobs:
+  cleanup-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set package names
+        run: |
+          echo "PACKAGE_NAMES=alfresco-transform-router,\
+          alfresco-shared-file-store,\
+          alfresco-content-repository,\
+          alfresco-imagemagick,\
+          alfresco-misc,\
+          alfresco-libreoffice,\
+          alfresco-pdf-renderer,\
+          alfresco-tika,\
+          alfresco-elasticsearch-live-indexing-content,\
+          alfresco-elasticsearch-live-indexing-path,\
+          alfresco-elasticsearch-live-indexing-metadata,\
+          alfresco-transform-core-aio,\
+          alfresco-elasticsearch-live-indexing,\
+          alfresco-share,\
+          alfresco-ooi-service,\
+          alfresco-ms-teams-service" >> $GITHUB_ENV
+      - name: Remove tag ${{format('pr-{0}', github.event.pull_request.number)}} after PR is closed
+        uses: dataaxiom/ghcr-cleanup-action@98b4022383d6ddb70ccbf6a378b4d8c67a60f066
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+        with:
+          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          owner: ${{ env.ORG }}
+          repository: ${{ env.REPO }}
+          packages: ${{ env.PACKAGE_NAMES }}
+          delete-tags: ${{format('pr-{0}', github.event.pull_request.number)}}
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'true' }} 
+      - name: Remove untaged images and keep latest ${{ env.KEEP_AMOUNT }} images
+        uses: dataaxiom/ghcr-cleanup-action@98b4022383d6ddb70ccbf6a378b4d8c67a60f066
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        with:
+          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          owner: ${{ env.ORG }}
+          repository: ${{ env.REPO }}
+          packages: ${{ env.PACKAGE_NAMES }}
+          keep-n-tagged: ${{ env.KEEP_AMOUNT }} # onetime cleanup
+          delete-untagged: true
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'true' }}
