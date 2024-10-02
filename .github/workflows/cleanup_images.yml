@@ -8,21 +8,17 @@ on:
   workflow_dispatch:
     inputs:
       dry-run:
-        description: 'If set to false, images will be deleted'
+        description: 'Disable to really delete images'
         required: false
         type: boolean
         default: true
 
-permissions:
-  packages: write
-
 env:
-  KEEP_AMOUNT: 1 # onetime cleanup
   ORG: Alfresco
   REPO: alfresco-dockerfiles-bakery
 
 jobs:
-  cleanup-pr:
+  cleanup:
     runs-on: ubuntu-latest
     steps:
       - name: Set package names
@@ -44,23 +40,22 @@ jobs:
           alfresco-ooi-service,\
           alfresco-ms-teams-service" >> $GITHUB_ENV
       - name: Remove tag ${{format('pr-{0}', github.event.pull_request.number)}} after PR is closed
-        uses: dataaxiom/ghcr-cleanup-action@98b4022383d6ddb70ccbf6a378b4d8c67a60f066
-        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+        uses: dataaxiom/ghcr-cleanup-action@98b4022383d6ddb70ccbf6a378b4d8c67a60f066 # v1.0.13
+        if: github.event_name == 'pull_request'
         with:
-          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          token: ${{ secrets.DELETE_PACKAGES_GITHUB_TOKEN }}
           owner: ${{ env.ORG }}
           repository: ${{ env.REPO }}
           packages: ${{ env.PACKAGE_NAMES }}
           delete-tags: ${{format('pr-{0}', github.event.pull_request.number)}}
-          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'true' }} 
-      - name: Remove untaged images and keep latest ${{ env.KEEP_AMOUNT }} images
-        uses: dataaxiom/ghcr-cleanup-action@98b4022383d6ddb70ccbf6a378b4d8c67a60f066
+          dry-run: false
+      - name: Remove untagged images
+        uses: dataaxiom/ghcr-cleanup-action@98b4022383d6ddb70ccbf6a378b4d8c67a60f066 # v1.0.13
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         with:
-          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          token: ${{ secrets.DELETE_PACKAGES_GITHUB_TOKEN }}
           owner: ${{ env.ORG }}
           repository: ${{ env.REPO }}
           packages: ${{ env.PACKAGE_NAMES }}
-          keep-n-tagged: ${{ env.KEEP_AMOUNT }} # onetime cleanup
           delete-untagged: true
-          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'true' }}
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || (github.event_name != 'workflow_dispatch' && 'false') }}
