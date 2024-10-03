@@ -1,5 +1,5 @@
 group "default" {
-  targets = ["content_service", "enterprise-search", "ats", "tengines", "connectors"]
+  targets = ["content_service", "enterprise-search", "ats", "tengines", "connectors", "search_service"]
 }
 
 group "content_service" {
@@ -573,6 +573,41 @@ target "share" {
     "org.opencontainers.image.description" = "Alfresco Share"
   }
   tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-share:${TAG}"]
+  output = ["type=docker"]
+  platforms = split(",", "${TARGETARCH}")
+}
+
+variable "ALFRESCO_SOLR_DIST_DIR" {
+  default = "/opt/alfresco-search-services"
+}
+
+variable "ALFRESCO_SOLR_USER_NAME" {
+  default = "solr"
+}
+
+variable "ALFRESCO_SOLR_USER_ID" {
+  default = "33007"
+}
+
+target "search_service" {
+  context = "./search/service"
+  dockerfile = "Dockerfile"
+  inherits = ["java_base"]
+  contexts = {
+    java_base = "target:java_base"
+  }
+  args = {
+    ALFRESCO_SOLR_GROUP_NAME = "${ALFRESCO_GROUP_NAME}"
+    ALFRESCO_SOLR_GROUP_ID = "${ALFRESCO_GROUP_ID}"
+    ALFRESCO_SOLR_USER_NAME = "${ALFRESCO_SOLR_USER_NAME}"
+    ALFRESCO_SOLR_USER_ID = "${ALFRESCO_SOLR_USER_ID}"
+    ALFRESCO_SOLR_DIST_DIR = "${ALFRESCO_SOLR_DIST_DIR}"
+  }
+  labels = {
+    "org.opencontainers.image.title" = "${PRODUCT_LINE} Search Service (Solr)"
+    "org.opencontainers.image.description" = "Alfresco Search Service (Solr)"
+  }
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-search-service:${TAG}"]
   output = ["type=docker"]
   platforms = split(",", "${TARGETARCH}")
 }
