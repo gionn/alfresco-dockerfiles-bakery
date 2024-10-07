@@ -7,7 +7,7 @@ group "content_service" {
 }
 
 group "enterprise-search" {
-  targets = ["search_liveindexing"]
+  targets = ["search_liveindexing", "search_reindexing"]
 }
 
 group "ats" {
@@ -98,14 +98,6 @@ variable "ALFRESCO_GROUP_NAME" {
   default = "alfresco"
 }
 
-variable "ALFRESCO_REPO_USER_ID" {
-  default = "33000"
-}
-
-variable "ALFRESCO_REPO_USER_NAME" {
-  default = "alfresco"
-}
-
 target "java_base" {
   context = "./java"
   dockerfile = "Dockerfile"
@@ -185,6 +177,14 @@ target "tomcat_base" {
   output = ["type=cacheonly"]
 }
 
+variable "ALFRESCO_REPO_USER_ID" {
+  default = "33000"
+}
+
+variable "ALFRESCO_REPO_USER_NAME" {
+  default = "alfresco"
+}
+
 target "repository" {
   context = "./repository"
   dockerfile = "Dockerfile"
@@ -207,32 +207,53 @@ target "repository" {
   platforms = split(",", "${TARGETARCH}")
 }
 
+variable "ALFRESCO_LIVEINDEX_USER_ID" {
+  default = "33011"
+}
+
+variable "ALFRESCO_LIVEINDEX_USER_NAME" {
+  default = "liveindexer"
+}
+
 target "search_liveindexing" {
   matrix = {
     liveindexing = [
       {
+        artifact = "alfresco-elasticsearch-live-indexing-mediation",
+        name = "mediation",
+        context = "common"
+      },
+      {
         artifact = "alfresco-elasticsearch-live-indexing-metadata",
-        name = "metadata"
+        name = "metadata",
+        context = "common"
       },
       {
         artifact = "alfresco-elasticsearch-live-indexing-path",
-        name = "path"
+        name = "path",
+        context = "common"
       },
       {
         artifact = "alfresco-elasticsearch-live-indexing-content",
-        name = "content"
+        name = "content",
+        context = "common"
       },
       {
         artifact = "alfresco-elasticsearch-live-indexing",
-        name = "all-in-one"
+        name = "all-in-one",
+        context = "all-in-one"
       }
     ]
   }
   name = "${liveindexing.artifact}"
   args = {
     LIVEINDEXING = "${liveindexing.artifact}"
+    ALFRESCO_LIVEINDEX_GROUP_ID = "${ALFRESCO_GROUP_ID}"
+    ALFRESCO_LIVEINDEX_GROUP_NAME = "${ALFRESCO_GROUP_NAME}"
+    ALFRESCO_LIVEINDEX_USER_ID = "${ALFRESCO_LIVEINDEX_USER_ID}"
+    ALFRESCO_LIVEINDEX_USER_NAME = "${ALFRESCO_LIVEINDEX_USER_NAME}"
   }
-  context = "./search/enterprise/common"
+  context = "./search/enterprise/${liveindexing.context}"
   dockerfile = "Dockerfile"
   inherits = ["java_base"]
   contexts = {
@@ -243,6 +264,36 @@ target "search_liveindexing" {
     "org.opencontainers.image.description" = "${PRODUCT_LINE} Enterprise Search - ${liveindexing.name} live indexing"
   }
   tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/${liveindexing.artifact}:${TAG}"]
+  output = ["type=docker"]
+  platforms = split(",", "${TARGETARCH}")
+}
+
+variable "ALFRESCO_REINDEX_USER_ID" {
+  default = "33011"
+}
+
+variable "ALFRESCO_REINDEX_USER_NAME" {
+  default = "liveindexer"
+}
+
+target "search_reindexing" {
+  context = "./search/enterprise/reindexing"
+  dockerfile = "Dockerfile"
+  inherits = ["java_base"]
+  contexts = {
+    java_base = "target:java_base"
+  }
+  args = {
+    ALFRESCO_REINDEX_GROUP_ID = "${ALFRESCO_GROUP_ID}"
+    ALFRESCO_REINDEX_GROUP_NAME = "${ALFRESCO_GROUP_NAME}"
+    ALFRESCO_REINDEX_USER_ID = "${ALFRESCO_REINDEX_USER_ID}"
+    ALFRESCO_REINDEX_USER_NAME = "${ALFRESCO_REINDEX_USER_NAME}"
+  }
+  labels = {
+    "org.opencontainers.image.title" = "${PRODUCT_LINE} Enterprise Search - reindexing"
+    "org.opencontainers.image.description" = "${PRODUCT_LINE} Enterprise Search - reindexing component"
+  }
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-elasticsearch-reindexing:${TAG}"]
   output = ["type=docker"]
   platforms = split(",", "${TARGETARCH}")
 }
