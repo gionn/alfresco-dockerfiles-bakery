@@ -1,4 +1,4 @@
-name: Build, Run and Test Docker Image
+name: CI
 
 on:
   push:
@@ -19,7 +19,7 @@ on:
       - 'README.md'
 
 env:
-  ACS_CHART_VERSION: 172410cfb4ad44d4839d9aefd31b4bcefc44f316
+  ACS_CHART_VERSION: 8a819c9b90b9015e5ab2654c47961fef4183cbcf # v8.5.1 plus the fix for community test values
   ARTIFACT_NAME: alfresco-docker-images
   REGISTRY: ghcr.io
   REGISTRY_NAMESPACE: alfresco
@@ -48,9 +48,9 @@ jobs:
         with:
           auto-commit: "true"
 
-  build-test:
-    runs-on: ubuntu-latest
+  build:
     needs: pre-commit
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
@@ -126,8 +126,7 @@ jobs:
             *.output=type=registry,push=true
 
   compose-test:
-    name: compose-test
-    needs: build-test
+    needs: build
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -160,13 +159,13 @@ jobs:
           output-archive-name: ${{ matrix.edition }}-logs
 
   helm-test:
+    needs: build
+    runs-on: ${{ matrix.arch == 'arm64' && 'alfrescoARM-ubuntu2404-16G-4CPU' || 'alfrescoPub-ubuntu2204-16G-4CPU' }}
     strategy:
       fail-fast: false
       matrix:
         arch: [arm64, amd64]
-    name: helm test
-    needs: build-test
-    runs-on: ${{ matrix.arch == 'arm64' && 'alfrescoARM-ubuntu2404-16G-4CPU' || 'alfrescoPub-ubuntu2204-16G-4CPU' }}
+        edition: [enterprise, community]
     steps:
       - name: Setup cluster
         uses: Alfresco/alfresco-build-tools/.github/actions/setup-kind@v7.1.1
@@ -206,10 +205,10 @@ jobs:
         with:
           repository: Alfresco/acs-deployment
           ref: ${{ env.ACS_CHART_VERSION }}
-          path: github-source
+          path: acs-deployment
 
       - name: Setup helm repository
-        working-directory: github-source/helm/alfresco-content-services
+        working-directory: acs-deployment/helm/alfresco-content-services
         run: |
           helm repo add self https://alfresco.github.io/alfresco-helm-charts/
           helm repo add activiti https://activiti.github.io/activiti-cloud-helm-charts
@@ -221,19 +220,26 @@ jobs:
         env:
           OVERRIDES_VALUES_FILE: test/helm/test-overrides.yaml
         run: |
-          sed -i "s|localhost/|${REGISTRY}/${REGISTRY_NAMESPACE}/|g" ${{ env.OVERRIDES_VALUES_FILE }}
+          sed -i "s|localhost/alfresco/|${REGISTRY}/${REGISTRY_NAMESPACE}/|g" ${{ env.OVERRIDES_VALUES_FILE }}
           sed -i "s|tag: latest|tag: ${TAG}|g" ${{ env.OVERRIDES_VALUES_FILE }}
+
+          if [ "${{ matrix.edition }}" = "community" ]; then
+            sed -i "s|/alfresco-content-repository|/alfresco-content-repository-community|g" ${{ env.OVERRIDES_VALUES_FILE }}
+          fi
+
           cat ${{ env.OVERRIDES_VALUES_FILE }}
 
       - name: Helm install
         id: helm_install
         run: |
-          helm install acs ./github-source/helm/alfresco-content-services \
+          helm install acs ./acs-deployment/helm/alfresco-content-services \
             --set global.search.sharedSecret="$(openssl rand -hex 24)" \
             --set global.known_urls=http://localhost \
             --set global.alfrescoRegistryPullSecrets=regcred \
-            --values ./github-source/test/enterprise-integration-test-values.yaml \
-            --values test/helm/test-overrides.yaml
+            --values ./acs-deployment/helm/alfresco-content-services/${{ matrix.edition == 'community' && 'community_' || '' }}values.yaml \
+            --values ./acs-deployment/test/${{ matrix.edition }}-integration-test-values.yaml \
+            --values test/helm/test-overrides.yaml \
+            --values test/helm/test-overrides-${{ matrix.edition }}.yaml
 
       - name: Watch Helm deployment
         env:
@@ -243,8 +249,11 @@ jobs:
           KWPID=$!
           kubectl wait --timeout=${{ env.HELM_INSTALL_TIMEOUT }} --all=true --for=condition=Ready pods
           kill $KWPID
-          echo "Waiting for ESC Reindexing job to complete... "
-          kubectl wait --timeout=5m --for=condition=complete job/acs-alfresco-search-enterprise-reindexing
+
+          if [ "${{ matrix.edition }}" = "enterprise" ]; then
+            echo "Waiting for Enterprise Search Reindexing job to complete... "
+            kubectl wait --timeout=5m --for=condition=complete job/acs-alfresco-search-enterprise-reindexing
+          fi
 
       - name: Debug cluster status after install
         if: always() && steps.helm_install.outcome != 'skipped'
@@ -265,7 +274,7 @@ jobs:
         if: always() && steps.helm_install.outcome != 'skipped'
         uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 #v4.4.0
         with:
-          name: k8s-logs-${{ matrix.arch }}
+          name: k8s-logs-${{ matrix.arch }}-${{ matrix.edition }}
           path: logs
 
       - name: Run helm test
