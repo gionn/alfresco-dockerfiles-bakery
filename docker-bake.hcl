@@ -1,9 +1,9 @@
 group "default" {
-  targets = ["content_service", "enterprise-search", "ats", "tengines", "connectors", "search_service"]
+  targets = ["content_service", "enterprise-search", "ats", "tengines", "connectors", "search_service", "adf_apps"]
 }
 
 group "community" {
-  targets = ["repository_community", "share", "search_service", "tengine_aio"]
+  targets = ["repository_community", "share", "search_service", "tengine_aio", "acc"]
 }
 
 group "content_service" {
@@ -24,6 +24,10 @@ group "tengines" {
 
 group "connectors" {
   targets = ["connector_msteams", "connector_ms365"]
+}
+
+group "adf_apps" {
+  targets = ["acc"]
 }
 
 variable "REGISTRY" {
@@ -697,6 +701,19 @@ target "search_service" {
     "org.opencontainers.image.description" = "Alfresco Search Service (Solr)"
   }
   tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-search-service:${TAG}"]
+  output = ["type=docker"]
+  platforms = split(",", "${TARGETARCH}")
+}
+
+target "acc" {
+  context = "./adf-apps/acc"
+  dockerfile = "Dockerfile"
+  labels = {
+    "org.label-schema.name" = "${PRODUCT_LINE} Control Center"
+    "org.opencontainers.image.title" = "${PRODUCT_LINE} Control Center"
+    "org.opencontainers.image.description" = "Alfresco Control Center"
+  }
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-control-center:${TAG}"]
   output = ["type=docker"]
   platforms = split(",", "${TARGETARCH}")
 }
