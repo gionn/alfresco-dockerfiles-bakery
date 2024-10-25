@@ -24,6 +24,8 @@ Bake](https://docs.docker.com/build/bake/).
     - [Targeting a specific architecture](#targeting-a-specific-architecture)
     - [Multi-arch images](#multi-arch-images)
   - [Testing locally](#testing-locally)
+    - [With helm](#with-helm)
+    - [With docker compose](#with-docker-compose)
   - [Security scanning](#security-scanning)
 
 ## Prerequisites
@@ -189,6 +191,8 @@ docker buildx bake repo --set *.output=type=registry,push=true
 
 ## Testing locally
 
+### With helm
+
 You can easily load all the built image in a local kind cluster with:
 
 ```sh
@@ -197,6 +201,23 @@ kind load docker-image $(docker images --format "{{.Repository}}" | grep "^local
 
 Then you can run an helm install passing as values the provided
 [test-overrides.yaml](./test/helm/test-overrides.yaml).
+
+
+### With docker compose
+
+You can use docker compose to test locally with:
+
+1. Fetch compose from acs-deployment repo using `scripts/fetch-compose.sh` script e.g.:
+
+```sh
+./scripts/fetch-compose.sh enterprise test/compose.yaml master
+```
+
+2. Run the compose with overriding file
+
+```sh
+docker compose -f test/compose.yaml -f test/enterprise-override.yaml up
+```
 
 ## Security scanning
 
