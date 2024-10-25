@@ -17,6 +17,7 @@ Alfresco Docker images based on the official Alfresco artifacts with the help of
     - [Targeting a specific architecture](#targeting-a-specific-architecture)
     - [Multi-arch images](#multi-arch-images)
   - [Testing locally](#testing-locally)
+  - [Security scanning](#security-scanning)
 
 ## Prerequisites
 
@@ -189,3 +190,35 @@ kind load docker-image $(docker images --format "{{.Repository}}" | grep "^local
 
 Then you can run an helm install passing as values the provided
 [test-overrides.yaml](./test/helm/test-overrides.yaml).
+
+## Security scanning
+
+The images built by this project may be scanned for vulnerabilities using Grype,
+if the `grype` binary is available in the PATH.
+
+> Grype is an open-source scanner for container images, ideal for identifying
+> recent vulnerabilities, especially within base OS images. While it supports
+> application libraries, it lacks reachability analysis, meaning it cannot
+> confirm whether vulnerabilities are actually exploitable in the context of the
+> application. For accurate insights, refer to Alfresco Security bulletins and
+> contact Hyland support, as these sources provide vetted information after
+> manual triaging of scanner findings within the application code. Remember to
+> always assess findings within the context of your specific deployment.
+
+If you want to run the security scan manually, you can use the following command:
+
+```sh
+make grype GRYPE_TARGET=repo GRYPE_OPTS="-f high --only-fixed --ignore-states wont-fix"
+```
+
+You can pass `GRYPE_OPTS` to override the default options passed to Grype, which
+by default exit with a non-zero status if any vulnerability greater than high is
+found and is filtering out known issues for which a fix is not available (yet or
+ever).
+
+You can also run grype automatically at the end of the build process by setting
+`GRYPE_ONBUILD`:
+
+```sh
+make all GRYPE_ONBUILD=1
+```
