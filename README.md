@@ -64,7 +64,13 @@ Alfresco images updated (e.g. with the latest OS security patches), you can
 simply run the command below from the root of this project:
 
 ```sh
-make all
+make enterprise
+```
+
+or for Community edition:
+
+```sh
+make community
 ```
 
 This command will build locally all the docker images this project offers.
