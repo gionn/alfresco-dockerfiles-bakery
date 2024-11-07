@@ -7,6 +7,10 @@ share:
   image:
     repository: localhost/alfresco/alfresco-share
     tag: latest
+alfresco-search:
+  image:
+    repository: localhost/alfresco/alfresco-search-service
+    tag: latest
 alfresco-search-enterprise:
   reindexing:
     image:
