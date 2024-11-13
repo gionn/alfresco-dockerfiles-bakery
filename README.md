@@ -24,6 +24,7 @@ Bake](https://docs.docker.com/build/bake/).
   - [Supported Architectures](#supported-architectures)
     - [Targeting a specific architecture](#targeting-a-specific-architecture)
     - [Multi-arch images](#multi-arch-images)
+  - [Building older versions](#building-older-versions)
   - [Testing locally](#testing-locally)
     - [Testing with helm](#testing-with-helm)
     - [Testing with docker compose](#testing-with-docker-compose)
@@ -194,6 +195,38 @@ additional argument to tell the tool to push the images to the registry:
 ```sh
 export REGISTRY=myecr.domain.tld REGISTRY_NAMESPACE=myalfrescobuilds TARGETARCH=linux/amd64,linux/arm64
 docker buildx bake repo --set *.output=type=registry,push=true
+```
+
+## Building older versions
+
+Versions of artifacts being downloaded specific to the ACS version are defined in `artifacts.json` files for each component.
+
+To build older version pass `ACS_VERSION` env to make command.
+- ACS 23 (current) - `ACS_VERSION=23` - `"acs23"` section in `artifacts.json` files - set by default
+- ACS 7.4 - `ACS_VERSION=74` - `"acs74"` section in `artifacts.json` files
+- ACS 7.3 - `ACS_VERSION=73` - `"acs73"` section in `artifacts.json` files
+
+```sh
+make enterprise ACS_VERSION=74
+```
+
+Make sets the correct version of Tomcat based on the ACS version. If you want to
+build older version of images using `docker buildx bake` it is required to set
+the Tomcat versions manually in bake file or using env variables.
+
+```sh
+export TOMCAT_VERSIONS_FILE=tomcat/tomcat_versions.yaml
+export TOMCAT_MAJOR=$(yq e '.tomcat9.major' $TOMCAT_VERSIONS_FILE)
+export TOMCAT_VERSION=$(yq e '.tomcat9.version' $TOMCAT_VERSIONS_FILE)
+export TOMCAT_SHA512=$(yq e '.tomcat9.sha512' $TOMCAT_VERSIONS_FILE)
+docker buildx bake tomcat_base
+```
+
+Before switching build to other version clean the artifacts using `make clean`
+then fetch correct version with e.g.:
+
+```sh
+make clean prepare ACS_VERSION=74
 ```
 
 ## Testing locally
