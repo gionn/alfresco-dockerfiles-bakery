@@ -3,7 +3,15 @@ group "default" {
 }
 
 group "enterprise" {
-  targets = ["content_service_enterprise", "search_enterprise", "ats", "tengines", "connectors", "adf_apps", "sync"]
+  targets = [
+    "content_service_enterprise",
+    "search_enterprise",
+    "ats",
+    "tengines",
+    "connectors",
+    "adf_apps",
+    "sync"
+  ]
 }
 
 group "community" {
@@ -11,7 +19,17 @@ group "community" {
 }
 
 group "content_service_enterprise" {
-  targets = ["repository_enterprise", "share_enterprise"]
+  targets = exclude_if_version(
+    ["74", "73"],
+    [
+      "repository_enterprise",
+      "share_enterprise",
+      "audit_storage"
+    ],
+    [
+      "audit_storage"
+    ]
+  )
 }
 
 group "content_service_community" {
@@ -116,6 +134,18 @@ variable "ALFRESCO_GROUP_ID" {
 
 variable "ALFRESCO_GROUP_NAME" {
   default = "alfresco"
+}
+
+variable "ACS_VERSION" {
+}
+
+function "exclude_if_version" {
+  params = [
+    versions,  # list of string versions
+    inputlist, # list of string targets
+    excludees  # list of string targets to exclude
+    ]
+  result = sethaselement(versions,"${ACS_VERSION}") ? setsubtract(inputlist, excludees) : inputlist
 }
 
 target "java_base" {
@@ -784,6 +814,37 @@ target "sync" {
     "org.opencontainers.image.description" = "Alfresco Sync Service"
   }
   tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-sync-service:${TAG}"]
+  output = ["type=docker"]
+  platforms = split(",", "${TARGETARCH}")
+}
+
+variable "ALFRESCO_AUDIT_STORAGE_USER_NAME" {
+  default = "auditstorage"
+}
+
+variable "ALFRESCO_AUDIT_STORAGE_USER_ID" {
+  default = "33008"
+}
+
+target "audit_storage" {
+  context = "./audit-storage"
+  dockerfile = "Dockerfile"
+  inherits = ["java_base"]
+  contexts = {
+    java_base = "target:java_base"
+  }
+  args = {
+    ALFRESCO_AUDIT_STORAGE_GROUP_NAME = "${ALFRESCO_GROUP_NAME}"
+    ALFRESCO_AUDIT_STORAGE_GROUP_ID = "${ALFRESCO_GROUP_ID}"
+    ALFRESCO_AUDIT_STORAGE_USER_NAME = "${ALFRESCO_AUDIT_STORAGE_USER_NAME}"
+    ALFRESCO_AUDIT_STORAGE_USER_ID = "${ALFRESCO_AUDIT_STORAGE_USER_ID}"
+  }
+  labels = {
+    "org.label-schema.name" = "${PRODUCT_LINE} Audit Storage"
+    "org.opencontainers.image.title" = "${PRODUCT_LINE} repository's Audit Storage"
+    "org.opencontainers.image.description" = "Alfresco Audit Storage for repository events"
+  }
+  tags = ["${REGISTRY}/${REGISTRY_NAMESPACE}/alfresco-audit-storage:${TAG}"]
   output = ["type=docker"]
   platforms = split(",", "${TARGETARCH}")
 }
