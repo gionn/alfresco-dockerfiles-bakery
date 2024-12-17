@@ -1,4 +1,7 @@
 ---
+updatecli_self: repository/artifacts-23.yaml
+updatecli_matrix_version: current
+updatecli_release_branch: release/23.3
 artifacts:
   postgresql:
     name: postgresql
@@ -9,7 +12,7 @@ artifacts:
     path: repository/libs
   alfresco-share-services:
     name: alfresco-share-services
-    version: 23.3.1.3
+    version: 23.3.1.4
     path: repository/amps
     classifier: ".amp"
     group: org.alfresco
@@ -23,7 +26,7 @@ artifacts:
     repository: releases
   alfresco-device-sync-repo:
     name: alfresco-device-sync-repo
-    version: 4.0.1
+    version: 4.0.0
     path: repository/amps_enterprise
     classifier: ".amp"
     group: org.alfresco.services.sync
@@ -42,6 +45,7 @@ artifacts:
     classifier: ".zip"
     group: org.alfresco
     repository: enterprise-releases
+    updatecli_matrix_component_key: acs
   alfresco-content-services-community-distribution:
     name: alfresco-content-services-community-distribution
     version: 23.3.0
@@ -49,3 +53,4 @@ artifacts:
     classifier: ".zip"
     group: org.alfresco
     repository: public
+    updatecli_matrix_component_key: acs
