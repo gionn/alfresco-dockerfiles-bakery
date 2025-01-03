@@ -1,8 +1,10 @@
 ---
+updatecli_self: connector/msteams/artifacts-23.yaml
+updatecli_matrix_version: current
 artifacts:
   alfresco-ms-teams-springboot:
     name: alfresco-ms-teams-springboot
-    version: 2.0.3
+    version: 2.0.4
     classifier: ".jar"
     repository: enterprise-releases
     group: org.alfresco

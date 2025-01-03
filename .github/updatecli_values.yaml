@@ -1,0 +1,48 @@
+---
+artifacts:
+  alfresco-content-services-distribution:
+    updatecli_matrix_component_key: acs
+  alfresco-content-services-community-distribution:
+    updatecli_matrix_component_key: acs
+  alfresco-content-services-share-distribution:
+    updatecli_matrix_component_key: share
+  alfresco-control-center:
+    updatecli_matrix_component_key: adminApp
+  alfresco-digital-workspace:
+    updatecli_matrix_component_key: adw
+  alfresco-shared-file-store-controller:
+    updatecli_matrix_component_key: sfs
+  alfresco-transform-router:
+    updatecli_matrix_component_key: trouter
+  alfresco-ms-teams-springboot:
+    updatecli_matrix_component_key: msteams
+  onedrive-springboot:
+    updatecli_matrix_component_key: onedrive
+  alfresco-elasticsearch-live-indexing:
+    updatecli_matrix_component_key: search-enterprise
+  alfresco-elasticsearch-live-indexing-mediation:
+    updatecli_matrix_component_key: search-enterprise
+  alfresco-elasticsearch-live-indexing-metadata:
+    updatecli_matrix_component_key: search-enterprise
+  alfresco-elasticsearch-live-indexing-path:
+    updatecli_matrix_component_key: search-enterprise
+  alfresco-elasticsearch-live-indexing-content:
+    updatecli_matrix_component_key: search-enterprise
+  alfresco-elasticsearch-reindexing:
+    updatecli_matrix_component_key: search-enterprise
+  alfresco-search-services:
+    updatecli_matrix_component_key: search
+  sync-distribution:
+    updatecli_matrix_component_key: sync
+  alfresco-transform-core-aio:
+    updatecli_matrix_component_key: tengine-aio
+  alfresco-transform-imagemagick:
+    updatecli_matrix_component_key: tengine-im
+  alfresco-transform-libreoffice:
+    updatecli_matrix_component_key: tengine-lo
+  alfresco-transform-misc:
+    updatecli_matrix_component_key: tengine-misc
+  alfresco-pdf-renderer-jar:
+    updatecli_matrix_component_key: tengine-pdf
+  alfresco-transform-tika:
+    updatecli_matrix_component_key: tengine-tika

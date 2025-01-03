@@ -1,7 +1,7 @@
 ---
 updatecli_self: repository/artifacts-73.yaml
 updatecli_matrix_version: 7.3.N
-updatecli_release_branch: release/7.3.2
+updatecli_amps_release_branch: release/7.3.2
 artifacts:
   postgresql:
     name: postgresql
@@ -50,7 +50,6 @@ artifacts:
     classifier: ".zip"
     group: org.alfresco
     repository: enterprise-releases
-    updatecli_matrix_component_key: acs
     checksum: "sha1:"
   alfresco-content-services-community-distribution:
     name: alfresco-content-services-community-distribution
@@ -59,4 +58,4 @@ artifacts:
     classifier: ".zip"
     group: org.alfresco
     repository: public
-    updatecli_matrix_component_key: acs
+    checksum: "sha1:"

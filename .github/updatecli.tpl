@@ -1,8 +1,8 @@
-name: Update Artifacts for {{ .updatecli_matrix_version }} version using reusable matrix
+name: Update Artifacts for version {{ .updatecli_matrix_version }} in {{ .updatecli_self }}
 
 sources:
 {{- range $key, $artifact := .artifacts }}
-  {{- if $artifact.updatecli_matrix_component_key }}
+  {{- if all $artifact.updatecli_matrix_component_key $artifact.group $artifact.name }}
   src_{{ $key }}:
     name: {{ $artifact.name }}
     kind: maven
@@ -12,17 +12,23 @@ sources:
       artifactid: {{ $artifact.name}}
       {{- $matrix_filter := index $ "matrix" $.updatecli_matrix_version $artifact.updatecli_matrix_component_key }}
       {{- if $matrix_filter }}
+      {{- $pattern := index $matrix_filter "pattern" }}
+      {{- $version := index $matrix_filter "version" }}
       versionFilter:
-        kind: regex
+        kind: {{ if $pattern }}regex{{ else }}semver{{ end }}
         pattern: >-
-          ^{{ index $matrix_filter "version" }}{{ index $matrix_filter "pattern" }}$
+          {{- if $pattern }}
+          ^{{ $version }}{{ $pattern }}$
+          {{- else }}
+          {{ $version }}
+          {{- end }}
       {{- end }}
   {{- end }}
 {{- end }}
 
 targets:
 {{- range $key, $artifact := .artifacts }}
-  {{- if $artifact.updatecli_matrix_component_key }}
+  {{- if all $artifact.updatecli_matrix_component_key $artifact.group $artifact.name }}
   yml_{{ $key }}:
     name: {{ $artifact.name }} yml
     kind: yaml
