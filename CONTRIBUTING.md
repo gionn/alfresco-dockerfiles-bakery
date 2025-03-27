@@ -1,4 +1,4 @@
-# Contribution Guide for Alfresco Bakery
+# Contribution Guide for Alfresco Bakery test
 
 Thank you for considering contributing to Alfresco Bakery! We welcome
 contributions from the community to help improve and expand our project. Before
